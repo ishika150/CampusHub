@@ -5,6 +5,7 @@ from uuid import UUID
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from postgrest import APIError
 from supabase import Client, create_client
 
@@ -19,6 +20,8 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 
 app = Flask(__name__)
+FRONTEND_URL = os.environ.get("FRONTEND_URL") or "*"
+CORS(app, resources={r"/api/*": {"origins": FRONTEND_URL}})
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 

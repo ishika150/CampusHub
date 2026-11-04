@@ -57,4 +57,42 @@ document.addEventListener('submit',function(x){x.preventDefault();var f=x.target
   if(S.step==1){d.n=$('#n').value;d.c=$('#c').value;d.desc=$('#ds').value}
   if(S.step==2){d.d=$('#d').value;d.v=$('#v').value;d.cap=$('#cp').value}
   if(S.step<4){S.step++;route()}else{E.push({id:E.length+1,t:d.n,c:d.c,tag:d.c,d:d.d.replace('T',' '),tm:'',v:d.v,n:+d.cap,bg:"#4B2160",p:"Free",about:d.desc||"New campus event."});S.draft={n:"",c:"",d:"",desc:"",v:"",cap:450};S.step=1;toast('Event published');go('#events')}}});
-addEventListener('hashchange',route);route();
+var API_BASE = "https://campushub-636k.onrender.com";
+
+function apiEventToCard(event) {
+ var rawDate = event.timestammp || event.timestamp || event.datetime || event.date;
+ var parsedDate = rawDate ? new Date(rawDate) : null;
+ var validDate = parsedDate && !isNaN(parsedDate.getTime());
+ return {
+  id:event.id,
+  t:event.title || event.name || "Campus event",
+  c:event.category || "Campus",
+  tag:event.category || "Event",
+  d:validDate ? parsedDate.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}) : (rawDate || "Date to be announced"),
+  tm:validDate ? parsedDate.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}) : "",
+  v:event.venue || event.location || "Campus",
+  n:event.capacity || 0,
+  bg:"#11243F",
+  p:"Free",
+  about:event.description || "Join this campus event."
+ };
+}
+
+function loadEventsFromApi() {
+ fetch(API_BASE + "/api/events")
+  .then(function(response){
+   if(!response.ok)throw new Error("API returned " + response.status);
+   return response.json();
+  })
+  .then(function(events){
+   if(!Array.isArray(events))throw new Error("API response was not an event list");
+   E=events.map(apiEventToCard);
+   S.bk=[];
+   route();
+  })
+  .catch(function(error){
+   console.error("Could not load events from Render:",error);
+  });
+}
+
+addEventListener('hashchange',route);route();loadEventsFromApi();
